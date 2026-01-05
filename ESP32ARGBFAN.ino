@@ -96,71 +96,178 @@ void updateClock() {
   }
 }
 
-// ===== PAGE WEB =====
+// ===== PAGE WEB AVEC CSS =====
 String htmlPage() {
-  String html = "<html><body><h2>ESP32 ARGB – Multi Ventilos</h2>";
+  String html = R"(
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ESP32 ARGB Multi-Fans</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #0b0c10;
+    color: #c5c6c7;
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  h1, h2, h3, h4 {
+    color: #66fcf1;
+    text-align: center;
+  }
+  .card {
+    background: #1f2833;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .col {
+    flex: 1;
+    min-width: 250px;
+  }
+  label {
+    display: inline-block;
+    margin: 5px 0;
+  }
+  input[type="number"], input[type="color"] {
+    padding: 4px;
+    margin: 3px 0;
+    border-radius: 4px;
+    border: 1px solid #45a29e;
+    background: #0b0c10;
+    color: #c5c6c7;
+  }
+  button, .btn-link {
+    display: inline-block;
+    padding: 6px 10px;
+    margin: 4px 2px;
+    border-radius: 4px;
+    border: none;
+    background: #45a29e;
+    color: #0b0c10;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  button:hover, .btn-link:hover {
+    background: #66fcf1;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-left: 5px;
+  }
+  .badge-on { background: #45a29e; color: #0b0c10; }
+  .badge-off { background: #c3073f; color: #fff; }
+  hr {
+    border: none;
+    border-top: 1px solid #45a29e;
+    margin: 15px 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>ESP32 ARGB Multi‑Fan Controller</h1>
+)";
 
-  html += "<h3>Heure actuelle</h3>";
-  html += "<form action='/setTime'>Heure: <input name='h' type='number' min='0' max='23' value='" + String(currentHour) + "'>";
-  html += " Minute: <input name='m' type='number' min='0' max='59' value='" + String(currentMinute) + "'>";
-  html += "<button type='submit'>OK</button></form><br>";
+  // Heure actuelle
+  html += "<div class='card'><h3>Horloge & Timer</h3>";
+  html += "<form action='/setTime' method='GET'>";
+  html += "<label>Heure actuelle :</label><br>";
+  html += "H: <input name='h' type='number' min='0' max='23' value='" + String(currentHour) + "'>";
+  html += " M: <input name='m' type='number' min='0' max='59' value='" + String(currentMinute) + "'>";
+  html += "<button type='submit'>Mettre à jour</button></form><br>";
 
-  html += "<h3>Plage horaire globale (Timer)</h3>";
-  html += "<form action='/setWindow'>Début H:<input name='sh' type='number' min='0' max='23' value='" + String(startHour) + "'>";
-  html += " M:<input name='sm' type='number' min='0' max='59' value='" + String(startMinute) + "'><br>";
-  html += "Fin H:<input name='eh' type='number' min='0' max='23' value='" + String(stopHour) + "'>";
-  html += " M:<input name='em' type='number' min='0' max='59' value='" + String(stopMinute) + "'>";
-  html += "<button type='submit'>OK</button></form><br>";
+  html += "<form action='/setWindow' method='GET'>";
+  html += "<label>Plage horaire globale :</label><br>";
+  html += "Début H: <input name='sh' type='number' min='0' max='23' value='" + String(startHour) + "'>";
+  html += " M: <input name='sm' type='number' min='0' max='59' value='" + String(startMinute) + "'><br>";
+  html += "Fin H: <input name='eh' type='number' min='0' max='23' value='" + String(stopHour) + "'>";
+  html += " M: <input name='em' type='number' min='0' max='59' value='" + String(stopMinute) + "'>";
+  html += "<button type='submit'>Valider</button></form>";
+  html += "</div>";
 
-  html += "<h3>Contrôle global</h3>";
-  html += "Mode global: " + String(globalControl ? "ACTIF" : "INACTIF");
-  html += " | <a href='/toggleGlobal?on=" + String(globalControl ? 0 : 1) + "'>";
-  html += globalControl ? "Désactiver contrôle global" : "Activer contrôle global";
-  html += "</a><br>";
+  // Contrôle global
+  html += "<div class='card'><h3>Contrôle global</h3>";
+  html += "<p>Contrôle global : ";
+  html += globalControl ? "<span class='badge badge-on'>ACTIF</span>" : "<span class='badge badge-off'>INACTIF</span>";
+  html += " <a class='btn-link' href='/toggleGlobal?on=" + String(globalControl ? 0 : 1) + "'>";
+  html += globalControl ? "Désactiver" : "Activer";
+  html += "</a></p>";
 
-  html += "Tous les ventilateurs: " + String(globalEnabled ? "ON" : "OFF");
-  html += " | <a href='/toggleAll?on=" + String(globalEnabled ? 0 : 1) + "'>";
+  html += "<p>Tous les ventilateurs : ";
+  html += globalEnabled ? "<span class='badge badge-on'>ON</span>" : "<span class='badge badge-off'>OFF</span>";
+  html += " <a class='btn-link' href='/toggleAll?on=" + String(globalEnabled ? 0 : 1) + "'>";
   html += globalEnabled ? "Tout éteindre" : "Tout allumer";
-  html += "</a><br><br>";
+  html += "</a></p>";
 
-  html += "Couleur globale: <input type='color' id='gcolor'><button onclick='setGlobalColor()'>OK</button><br>";
+  html += "<label>Couleur globale :</label><br>";
+  html += "<input type='color' id='gcolor'>";
+  html += "<button type='button' onclick='setGlobalColor()'>Appliquer</button><br><br>";
 
-  html += "Modes globaux: ";
-  html += "<a href='/setGlobalMode?m=1'>Fixe</a> | ";
-  html += "<a href='/setGlobalMode?m=2'>Pulser</a> | ";
-  html += "<a href='/setGlobalMode?m=3'>Pulser+Couleur</a> | ";
-  html += "<a href='/setGlobalMode?m=4'>Cycle couleur</a> | ";
-  html += "<a href='/setGlobalMode?m=5'>Timer</a> | ";
-  html += "<a href='/setGlobalMode?m=0'>OFF</a><br><br>";
+  html += "<label>Mode global :</label><br>";
+  html += "<a class='btn-link' href='/setGlobalMode?m=1'>Fixe</a>";
+  html += "<a class='btn-link' href='/setGlobalMode?m=2'>Pulser</a>";
+  html += "<a class='btn-link' href='/setGlobalMode?m=3'>Pulser+Couleur</a>";
+  html += "<a class='btn-link' href='/setGlobalMode?m=4'>Cycle</a>";
+  html += "<a class='btn-link' href='/setGlobalMode?m=5'>Timer</a>";
+  html += "<a class='btn-link' href='/setGlobalMode?m=0'>OFF</a>";
 
-  html += "<h3>Vitesses</h3>";
-  html += "<form action='/setSpeeds'>";
-  html += "Pulser (1–10): <input name='ps' type='number' min='1' max='10' value='" + String(pulseSpeed) + "'><br>";
-  html += "Pulser+Couleur (1–10): <input name='pcs' type='number' min='1' max='10' value='" + String(pulseColorSpeed) + "'><br>";
-  html += "Cycle Couleur (1–10): <input name='cs' type='number' min='1' max='10' value='" + String(cycleSpeed) + "'><br>";
-  html += "<button type='submit'>OK</button></form><br><hr>";
+  html += "<hr><form action='/setSpeeds' method='GET'>";
+  html += "<label>Vitesse Pulser (1–10) :</label><br>";
+  html += "<input name='ps' type='number' min='1' max='10' value='" + String(pulseSpeed) + "'><br>";
+  html += "<label>Vitesse Pulser+Couleur (1–10) :</label><br>";
+  html += "<input name='pcs' type='number' min='1' max='10' value='" + String(pulseColorSpeed) + "'><br>";
+  html += "<label>Vitesse Cycle Couleur (1–10) :</label><br>";
+  html += "<input name='cs' type='number' min='1' max='10' value='" + String(cycleSpeed) + "'><br>";
+  html += "<button type='submit'>Appliquer vitesses</button></form>";
+  html += "</div>";
 
-  html += "<h3>Contrôle individuel</h3>";
+  // Contrôle individuel
+  html += "<div class='card'><h3>Contrôle individuel</h3><div class='row'>";
 
   for (int i = 0; i < FAN_COUNT; i++) {
+    html += "<div class='col'><div class='card'>";
     html += "<h4>Ventilateur " + String(i + 1) + "</h4>";
-    html += "État: " + String(fanEnabled[i] ? "ON" : "OFF");
-    html += " | <a href='/toggleFan?fan=" + String(i) + "'>";
+    html += "<p>État : ";
+    html += fanEnabled[i] ? "<span class='badge badge-on'>ON</span>" : "<span class='badge badge-off'>OFF</span>";
+    html += " <a class='btn-link' href='/toggleFan?fan=" + String(i) + "'>";
     html += fanEnabled[i] ? "Éteindre" : "Allumer";
-    html += "</a><br>";
+    html += "</a></p>";
 
-    html += "Couleur: <input type='color' id='c" + String(i) + "'>";
-    html += "<button onclick='setColor(" + String(i) + ")'>OK</button><br>";
+    html += "<label>Couleur :</label><br>";
+    html += "<input type='color' id='c" + String(i) + "'>";
+    html += "<button type='button' onclick='setColor(" + String(i) + ")'>Appliquer</button><br><br>";
 
-    html += "Modes: ";
-    html += "<a href='/setMode?fan=" + String(i) + "&m=1'>Fixe</a> | ";
-    html += "<a href='/setMode?fan=" + String(i) + "&m=2'>Pulser</a> | ";
-    html += "<a href='/setMode?fan=" + String(i) + "&m=3'>Pulser+Couleur</a> | ";
-    html += "<a href='/setMode?fan=" + String(i) + "&m=4'>Cycle couleur</a> | ";
-    html += "<a href='/setMode?fan=" + String(i) + "&m=5'>Timer</a> | ";
-    html += "<a href='/setMode?fan=" + String(i) + "&m=0'>OFF</a><br><br>";
+    html += "<label>Mode :</label><br>";
+    html += "<a class='btn-link' href='/setMode?fan=" + String(i) + "&m=1'>Fixe</a>";
+    html += "<a class='btn-link' href='/setMode?fan=" + String(i) + "&m=2'>Pulser</a>";
+    html += "<a class='btn-link' href='/setMode?fan=" + String(i) + "&m=3'>Pulser+Couleur</a>";
+    html += "<a class='btn-link' href='/setMode?fan=" + String(i) + "&m=4'>Cycle</a>";
+    html += "<a class='btn-link' href='/setMode?fan=" + String(i) + "&m=5'>Timer</a>";
+    html += "<a class='btn-link' href='/setMode?fan=" + String(i) + "&m=0'>OFF</a>";
+
+    html += "</div></div>";
   }
 
+  html += "</div></div>";
+
+  // JS
   html += R"(
 <script>
 function setColor(f){
@@ -172,9 +279,8 @@ function setGlobalColor(){
   fetch("/setGlobalColor?c="+c);
 }
 </script>
+</div></body></html>
 )";
-
-  html += "</body></html>";
   return html;
 }
 
@@ -296,13 +402,10 @@ void loop() {
   if (millis() - lastAnim < 20) return;
   lastAnim = millis();
 
-  // Gestion des phases animation selon vitesses (1–10)
-  // On convertit en "pas" raisonnable
   int pulseStep      = map(pulseSpeed,      1, 10, 1, 10);
   int pulseColorStep = map(pulseColorSpeed, 1, 10, 1, 10);
   int cycleStep      = map(cycleSpeed,      1, 10, 1, 5);
 
-  // Mise à jour pulse phase
   if (pulseUp) pulsePhase += pulseStep;
   else         pulsePhase -= pulseStep;
   if (pulsePhase >= 255) { pulsePhase = 255; pulseUp = false; }
